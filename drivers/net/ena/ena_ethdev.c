@@ -2610,6 +2610,8 @@ static uint64_t ena_get_rx_port_offloads(struct ena_adapter *adapter)
 
 	port_offloads |= RTE_ETH_RX_OFFLOAD_SCATTER;
 
+	port_offloads |= RTE_ETH_RX_OFFLOAD_TIMESTAMP;
+
 	return port_offloads;
 }
 

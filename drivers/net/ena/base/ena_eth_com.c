@@ -32,8 +32,9 @@ struct ena_eth_io_rx_cdesc_base *ena_com_get_next_rx_cdesc(struct ena_com_io_cq 
 	return cdesc;
 }
 
+// Function not called anywhere; looks like just for debugging
 void ena_com_dump_single_rx_cdesc(struct ena_com_io_cq *io_cq,
-				  struct ena_eth_io_rx_cdesc_base *desc)
+				  struct ena_eth_io_rx_cdesc_base *desc) // ena_eth_io_rx_cdesc_ext ?
 {
 	if (desc) {
 		uint32_t *desc_arr = (uint32_t *)desc;
@@ -53,9 +54,14 @@ void ena_com_dump_single_rx_cdesc(struct ena_com_io_cq *io_cq,
 			    ENA_FIELD_GET(desc->status,
 					  (uint32_t)ENA_ETH_IO_RX_CDESC_BASE_MBZ17_MASK,
 					  ENA_ETH_IO_RX_CDESC_BASE_MBZ17_SHIFT));
+		// if (unlikely(ena_com_is_extended_rx_cdesc(io_cq)))
+		// 	netdev_err(ena_com_io_cq_to_ena_dev(io_cq)->net_device,
+		// 		   "RX descriptor timestamp %llu",
+		// 		   (u64)desc->timestamp_low | (u64)desc->timestamp_high << 32);
 	}
 }
 
+// Function not called anywhere; looks like just for debugging
 void ena_com_dump_single_tx_cdesc(struct ena_com_io_cq *io_cq,
 				  struct ena_eth_io_tx_cdesc *desc)
 {
@@ -69,6 +75,10 @@ void ena_com_dump_single_tx_cdesc(struct ena_com_io_cq *io_cq,
 					  0),
 			    ENA_FIELD_GET(desc->flags, (uint32_t)ENA_ETH_IO_TX_CDESC_MBZ6_MASK,
 					  ENA_ETH_IO_TX_CDESC_MBZ6_SHIFT));
+		// if (unlikely(ena_com_is_extended_tx_cdesc(io_cq)))
+		// 	netdev_err(ena_com_io_cq_to_ena_dev(io_cq)->net_device,
+		// 		   "TX descriptor timestamp %llu",
+		// 		   (u64)desc->timestamp_low | (u64)desc->timestamp_high << 32);
 	}
 }
 
@@ -620,7 +630,7 @@ int ena_com_rx_pkt(struct ena_com_io_cq *io_cq,
 		   struct ena_com_rx_ctx *ena_rx_ctx)
 {
 	struct ena_com_rx_buf_info *ena_buf = &ena_rx_ctx->ena_bufs[0];
-	struct ena_eth_io_rx_cdesc_base *cdesc = NULL;
+	struct ena_eth_io_rx_cdesc_base *cdesc = NULL; // ena_eth_io_rx_cdesc_ext
 	u16 q_depth = io_cq->q_depth;
 	u16 cdesc_idx = 0;
 	u16 nb_hw_desc;
@@ -675,6 +685,10 @@ int ena_com_rx_pkt(struct ena_com_io_cq *io_cq,
 
 	/* Get rx flags from the last pkt */
 	ena_com_rx_set_flags(ena_rx_ctx, cdesc);
+
+	if (unlikely(ena_com_is_extended_rx_cdesc(io_cq)))
+		ena_rx_ctx->timestamp = (u64)cdesc->timestamp_low |
+					(u64)cdesc->timestamp_high << 32;
 
 	ena_trc_dbg(ena_com_io_cq_to_ena_dev(io_cq),
 		    "l3_proto %d l4_proto %d l3_csum_err %d l4_csum_err %d hash %d frag %d cdesc_status %x\n",

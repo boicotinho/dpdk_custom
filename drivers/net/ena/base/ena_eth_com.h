@@ -60,6 +60,7 @@ struct ena_com_rx_ctx {
 	u16 descs;
 	u16 max_bufs;
 	u8 pkt_offset;
+	u64 timestamp;
 };
 
 int ena_com_prepare_tx(struct ena_com_io_sq *io_sq,
@@ -223,6 +224,7 @@ static inline void ena_com_cq_inc_head(struct ena_com_io_cq *io_cq)
 		io_cq->phase ^= 1;
 }
 
+// In the kernel driver, this was renamed ena_com_tx_comp_metadata_get() and adds extra argument: u64* hw_timestamp
 static inline int ena_com_tx_comp_req_id_get(struct ena_com_io_cq *io_cq,
 					     u16 *req_id)
 {
@@ -271,6 +273,33 @@ static inline int ena_com_tx_comp_req_id_get(struct ena_com_io_cq *io_cq,
 	ena_com_cq_inc_head(io_cq);
 
 	return 0;
+}
+
+// TODO: Remove this function if it ends up unused
+// This is my adapted implementation for ena_com_tx_comp_metadata_get().
+// It doesn't seem to be needed in DPDK though. The kernel driver only calls
+// this from kernel/linux/ena/ena_xdp.c and kernel/linux/ena/ena_netdev.c,
+// both of which do not exist in DPDK
+static inline int ena_com_tx_comp_metadata_get(struct ena_com_io_cq *io_cq,
+					       u16 *req_id,
+					       u64 *hw_timestamp)
+{
+	int res = ena_com_tx_comp_req_id_get(io_cq, req_id);
+
+	if (0 == res)
+	{
+		u16 masked_head = io_cq->head & (io_cq->q_depth - 1);
+		struct ena_eth_io_tx_cdesc_ext * const cdesc = (struct ena_eth_io_tx_cdesc_ext *)
+			((uintptr_t)io_cq->cdesc_addr.virt_addr +
+			(masked_head * io_cq->cdesc_entry_size_in_bytes));
+
+
+		if (unlikely(ena_com_is_extended_tx_cdesc(io_cq)))
+			*hw_timestamp = (u64)cdesc->timestamp_low |
+					(u64)cdesc->timestamp_high << 32;
+	}
+
+	return res;
 }
 
 #if defined(__cplusplus)

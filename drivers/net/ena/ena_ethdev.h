@@ -281,6 +281,17 @@ struct ena_offloads {
 	uint32_t rx_offloads;
 };
 
+struct hwtstamp_config {
+	int flags;
+	int tx_type;
+	int rx_filter;
+};
+struct hw_timestamp_state {
+	struct hwtstamp_config ts_cfg;
+	u8 hw_tx_supported;
+	u8 hw_rx_supported;
+};
+
 /* board specific private data structure */
 struct ena_adapter {
 	/* OS defined structs */
@@ -357,6 +368,8 @@ struct ena_adapter {
 	alignas(RTE_CACHE_LINE_SIZE) uint64_t metrics_stats[ENA_MAX_CUSTOMER_METRICS];
 	uint16_t metrics_num;
 	alignas(RTE_CACHE_LINE_SIZE) struct ena_stats_srd srd_stats;
+
+	struct hw_timestamp_state hw_ts_state;
 };
 
 size_t ena_rss_get_indirection_table_size(struct ena_adapter *adapter);

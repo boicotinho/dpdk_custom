@@ -1439,19 +1439,21 @@ static int ena_create_io_queue(struct rte_eth_dev *dev, struct ena_ring *ring)
 	struct rte_intr_handle *intr_handle = pci_dev->intr_handle;
 	struct ena_com_create_io_ctx ctx =
 		{ ENA_ADMIN_PLACEMENT_POLICY_HOST,
-		  0, 0, 0, 0, 0, true }; // <- use_extended_cdesc
+		  0, 0, 0, 0, 0, false }; // <- use_extended_cdesc
 	uint16_t ena_qid;
 	unsigned int i;
 	int rc;
 
 	ctx.msix_vector = -1;
 	if (ring->type == ENA_RING_TYPE_TX) {
+		ctx.use_extended_cdesc = false;
 		ena_qid = ENA_IO_TXQ_IDX(ring->id);
 		ctx.direction = ENA_COM_IO_QUEUE_DIRECTION_TX;
 		ctx.mem_queue_type = ena_dev->tx_mem_queue_type;
 		for (i = 0; i < ring->ring_size; i++)
 			ring->empty_tx_reqs[i] = i;
 	} else {
+		ctx.use_extended_cdesc = true;
 		ena_qid = ENA_IO_RXQ_IDX(ring->id);
 		ctx.direction = ENA_COM_IO_QUEUE_DIRECTION_RX;
 		if (rte_intr_dp_is_en(intr_handle))
@@ -2558,6 +2560,21 @@ static int ena_dev_configure(struct rte_eth_dev *dev)
 	 * queue, they will be detected sooner or later.
 	 */
 	adapter->tx_cleanup_stall_delay = adapter->missing_tx_completion_to / 2;
+
+	dev->data->dev_conf.txmode.offloads; // -> tx_enable
+	dev->data->dev_conf.rxmode.offloads; // -> rx_enable
+	bool tx_enable = false;
+	bool rx_enable = true;
+
+	rc = ena_com_set_hw_timestamping_configuration(&adapter->ena_dev,
+						       tx_enable,
+						       rx_enable);
+	if (rc) {
+		PMD_INIT_LOG_LINE(ERR,
+			   "Failed to set HW timestamping configuration, error: %d",
+			   rc);
+		return rc;
+	}
 
 	rc = ena_configure_aenq(adapter);
 

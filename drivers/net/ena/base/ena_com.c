@@ -546,7 +546,7 @@ static int ena_com_comp_status_to_errno(struct ena_com_admin_queue *admin_queue,
 	case ENA_ADMIN_BAD_OPCODE:
 	case ENA_ADMIN_MALFORMED_REQUEST:
 	case ENA_ADMIN_ILLEGAL_PARAMETER:
-	case ENA_ADMIN_UNKNOWN_ERROR:
+	case ENA_ADMIN_UNKNOWN_ERROR: // this is what device start admin cmd is giving
 		return ENA_COM_INVAL;
 	case ENA_ADMIN_RESOURCE_BUSY:
 		return ENA_COM_TRY_AGAIN;

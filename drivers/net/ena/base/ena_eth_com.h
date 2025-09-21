@@ -21,7 +21,7 @@ void ena_com_dump_single_rx_cdesc(struct ena_com_io_cq *io_cq,
 void ena_com_dump_single_tx_cdesc(struct ena_com_io_cq *io_cq,
 				  struct ena_eth_io_tx_cdesc *desc);
 struct ena_eth_io_rx_cdesc_base *ena_com_get_next_rx_cdesc(struct ena_com_io_cq *io_cq);
-struct ena_eth_io_rx_cdesc_base *ena_com_rx_cdesc_idx_to_ptr(struct ena_com_io_cq *io_cq, u16 idx);
+struct ena_eth_io_rx_cdesc_ext *ena_com_rx_cdesc_idx_to_ptr(struct ena_com_io_cq *io_cq, u16 idx);
 struct ena_eth_io_tx_cdesc *ena_com_tx_cdesc_idx_to_ptr(struct ena_com_io_cq *io_cq, u16 idx);
 
 struct ena_com_tx_ctx {
@@ -76,6 +76,16 @@ int ena_com_add_single_rx_desc(struct ena_com_io_sq *io_sq,
 			       u16 req_id);
 
 bool ena_com_cq_empty(struct ena_com_io_cq *io_cq);
+
+static inline bool ena_com_is_extended_tx_cdesc(struct ena_com_io_cq *io_cq)
+{
+	return io_cq->cdesc_entry_size_in_bytes == sizeof(struct ena_eth_io_tx_cdesc_ext);
+}
+
+static inline bool ena_com_is_extended_rx_cdesc(struct ena_com_io_cq *io_cq)
+{
+	return io_cq->cdesc_entry_size_in_bytes == sizeof(struct ena_eth_io_rx_cdesc_ext);
+}
 
 static inline void ena_com_unmask_intr(struct ena_com_io_cq *io_cq,
 				       struct ena_eth_io_intr_reg *intr_reg)

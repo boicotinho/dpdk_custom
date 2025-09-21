@@ -421,11 +421,16 @@ static int ena_com_init_io_cq(struct ena_com_dev *ena_dev,
 
 	memset(&io_cq->cdesc_addr, 0x0, sizeof(io_cq->cdesc_addr));
 
-	/* Use the basic completion descriptor for Rx */
-	io_cq->cdesc_entry_size_in_bytes =
-		(io_cq->direction == ENA_COM_IO_QUEUE_DIRECTION_TX) ?
-		sizeof(struct ena_eth_io_tx_cdesc) :
-		sizeof(struct ena_eth_io_rx_cdesc_base);
+	if (ctx->use_extended_cdesc)
+		io_cq->cdesc_entry_size_in_bytes =
+			(io_cq->direction == ENA_COM_IO_QUEUE_DIRECTION_TX) ?
+			sizeof(struct ena_eth_io_tx_cdesc_ext) :
+			sizeof(struct ena_eth_io_rx_cdesc_ext);
+	else
+		io_cq->cdesc_entry_size_in_bytes =
+			(io_cq->direction == ENA_COM_IO_QUEUE_DIRECTION_TX) ?
+			sizeof(struct ena_eth_io_tx_cdesc) :
+			sizeof(struct ena_eth_io_rx_cdesc_base);
 
 	size = io_cq->cdesc_entry_size_in_bytes * io_cq->q_depth;
 	io_cq->bus = ena_dev->bus;
@@ -1120,7 +1125,7 @@ int ena_com_get_hw_timestamping_support(struct ena_com_dev *ena_dev,
 	*rx_support = ENA_ADMIN_HW_TIMESTAMP_RX_SUPPORT_NONE;
 
 	if (!ena_com_hw_timestamping_supported(ena_dev)) {
-		netdev_dbg(ena_dev->net_device, "HW timestamping is not supported\n");
+		ena_trc_dbg(ena_dev, "HW timestamping is not supported\n");
 		return -EOPNOTSUPP;
 	}
 
@@ -1130,7 +1135,7 @@ int ena_com_get_hw_timestamping_support(struct ena_com_dev *ena_dev,
 				  ENA_ADMIN_HW_TIMESTAMP_FEATURE_VERSION_1);
 
 	if (unlikely(ret)) {
-		netdev_err(ena_dev->net_device,
+		ena_trc_err(ena_dev,
 			   "Failed to get HW timestamp configuration, error: %d\n", ret);
 		return ret;
 	}
@@ -1150,7 +1155,7 @@ int ena_com_set_hw_timestamping_configuration(struct ena_com_dev *ena_dev,
 	int ret;
 
 	if (!ena_com_hw_timestamping_supported(ena_dev)) {
-		netdev_dbg(ena_dev->net_device, "HW timestamping is not supported\n");
+		ena_trc_dbg(ena_dev, "HW timestamping is not supported\n");
 		return -EOPNOTSUPP;
 	}
 
@@ -1169,7 +1174,7 @@ int ena_com_set_hw_timestamping_configuration(struct ena_com_dev *ena_dev,
 					    (struct ena_admin_acq_entry *)&resp,
 					    sizeof(resp));
 	if (unlikely(ret)) {
-		netdev_err(ena_dev->net_device,
+		ena_trc_err(ena_dev,
 			   "Failed to set HW timestamping configuration, error: %d\n", ret);
 		return ret;
 	}

@@ -283,11 +283,11 @@ static int ena_com_sq_update_tail(struct ena_com_io_sq *io_sq)
 	return ena_com_sq_update_reqular_queue_tail(io_sq);
 }
 
-struct ena_eth_io_rx_cdesc_base *
+struct ena_eth_io_rx_cdesc_ext *
 	ena_com_rx_cdesc_idx_to_ptr(struct ena_com_io_cq *io_cq, u16 idx)
 {
 	idx &= (io_cq->q_depth - 1);
-	return (struct ena_eth_io_rx_cdesc_base *)
+	return (struct ena_eth_io_rx_cdesc_ext *)
 		((uintptr_t)io_cq->cdesc_addr.virt_addr +
 		idx * io_cq->cdesc_entry_size_in_bytes);
 }
@@ -630,7 +630,7 @@ int ena_com_rx_pkt(struct ena_com_io_cq *io_cq,
 		   struct ena_com_rx_ctx *ena_rx_ctx)
 {
 	struct ena_com_rx_buf_info *ena_buf = &ena_rx_ctx->ena_bufs[0];
-	struct ena_eth_io_rx_cdesc_base *cdesc = NULL; // ena_eth_io_rx_cdesc_ext
+	struct ena_eth_io_rx_cdesc_ext *cdesc = NULL;
 	u16 q_depth = io_cq->q_depth;
 	u16 cdesc_idx = 0;
 	u16 nb_hw_desc;
@@ -661,11 +661,11 @@ int ena_com_rx_pkt(struct ena_com_io_cq *io_cq,
 	}
 
 	cdesc = ena_com_rx_cdesc_idx_to_ptr(io_cq, cdesc_idx);
-	ena_rx_ctx->pkt_offset = cdesc->offset;
+	ena_rx_ctx->pkt_offset = cdesc->base.offset;
 
 	do {
-		ena_buf[i].len = cdesc->length;
-		ena_buf[i].req_id = cdesc->req_id;
+		ena_buf[i].len = cdesc->base.length;
+		ena_buf[i].req_id = cdesc->base.req_id;
 		if (unlikely(ena_buf[i].req_id >= q_depth))
 			return ENA_COM_EIO;
 

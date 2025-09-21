@@ -1439,7 +1439,7 @@ static int ena_create_io_queue(struct rte_eth_dev *dev, struct ena_ring *ring)
 	struct rte_intr_handle *intr_handle = pci_dev->intr_handle;
 	struct ena_com_create_io_ctx ctx =
 		{ ENA_ADMIN_PLACEMENT_POLICY_HOST,
-		  0, 0, 0, 0, 0 };
+		  0, 0, 0, 0, 0, true }; // <- use_extended_cdesc
 	uint16_t ena_qid;
 	unsigned int i;
 	int rc;

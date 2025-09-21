@@ -421,6 +421,7 @@ struct ena_com_create_io_ctx {
 	u32 msix_vector;
 	u16 queue_size;
 	u16 qid;
+	bool use_extended_cdesc;
 };
 
 typedef void (*ena_aenq_handler)(void *data,

@@ -721,6 +721,7 @@ static inline void ena_rx_mbuf_prepare(struct ena_ring *rx_ring,
 
 	mbuf->ol_flags = ol_flags;
 	mbuf->packet_type = packet_type;
+	*(uint64_t*)(&mbuf->dynfield1[1]) = ena_rx_ctx->timestamp; // FIXME: use dynamic field allocation
 }
 
 static inline void ena_tx_mbuf_prepare(struct rte_mbuf *mbuf,

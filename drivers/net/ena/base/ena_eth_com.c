@@ -698,7 +698,7 @@ int ena_com_rx_pkt(struct ena_com_io_cq *io_cq,
 		    ena_rx_ctx->l4_csum_err,
 		    ena_rx_ctx->hash,
 		    ena_rx_ctx->frag,
-		    cdesc->status);
+		    cdesc->base.status);
 
 	ena_rx_ctx->descs = nb_hw_desc;
 

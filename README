@@ -1,3 +1,7 @@
+This is a fork of DPDK. 
+Currently the only addition is a hack implementation of Hardware RX
+timestamps for ENA PMD.
+
 DPDK is a set of libraries and drivers for fast packet processing.
 It supports many processor architectures and both FreeBSD and Linux.
 
